@@ -1,0 +1,16 @@
+.quiz-settings {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .quiz-dropdown, .quiz-input {
+    width: 200px;
+  }
+  
+  .quiz-button {
+    background-color: #1890ff;
+    color: white;
+  }
+  

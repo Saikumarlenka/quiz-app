@@ -1,0 +1,11 @@
+.sidebar {
+    background: #001529;
+  }
+  
+  .toggle-btn {
+    text-align: end;
+
+    cursor: pointer;
+    color: white;
+  }
+  

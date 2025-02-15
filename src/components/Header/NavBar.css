@@ -1,0 +1,15 @@
+.header-navbar {
+    background: #1890ff;
+
+    color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .app-title {
+    margin: 0;
+    font-size: 24px;
+  }
+  

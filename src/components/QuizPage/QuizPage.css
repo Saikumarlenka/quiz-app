@@ -1,0 +1,32 @@
+.quiz-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  .quiz-card {
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+  
+  .selected-option {
+    background-color: #1890ff !important;
+    color: white !important;
+    border-radius: 5px;
+  }
+  
+  .submit-btn {
+    align-self: center;
+    margin-top: 20px;
+  }
+  
