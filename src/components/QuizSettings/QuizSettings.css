@@ -13,4 +13,9 @@
     background-color: #1890ff;
     color: white;
   }
+  .quiz-actions {
+    display: flex;
+    gap: 20px;
+    margin: 20px;
+  }
   
