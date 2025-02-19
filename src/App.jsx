@@ -3,11 +3,11 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import HomePage from "./pages/HomePage";
-import { AuthProvider } from "./context/UserContext"; // Import AuthProvider
+import { AuthProvider } from "./context/UserContext"; 
 
 function App() {
   return (
-    <AuthProvider> {/* ✅ Wrap the app with AuthProvider */}
+    <AuthProvider> 
       <HomePage />
     </AuthProvider>
   );

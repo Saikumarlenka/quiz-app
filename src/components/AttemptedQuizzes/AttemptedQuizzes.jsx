@@ -52,7 +52,7 @@ const AttemptedQuizzes = () => {
           const attempt = docSnap.data();
           const quizRef = doc(db, "quizzes", attempt.quizId);
           const quizSnap = await getDoc(quizRef);
-          const quizName = quizSnap.exists() ? quizSnap.data().title : "Unknown Quiz"; // Assuming quiz has a "title"
+          const quizName = quizSnap.exists() ? quizSnap.data().concept : "Unknown Quiz"; // Assuming quiz has a "title"
 
           fetchedAttempts.push({
             key: docSnap.id,
