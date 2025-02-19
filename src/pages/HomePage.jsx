@@ -12,6 +12,7 @@ import AttemptQuiz from "../components/Attempt-quiz/AttemptQuiz";
 import ScoreCard from "../components/Attempt-quiz/ScoreCard";
 import Responses from "../components/Response/Response";
 import ViewResponse from "../components/Response/ViewResponse";
+import AttemptedQuizzes from "../components/AttemptedQuizzes/AttemptedQuizzes";
 
 const { Content } = Layout;
 
@@ -37,6 +38,7 @@ const Home = () => {
               <Route path="/scorecard/:attemptId" element={<ScoreCard />} />
               <Route path="/quiz-responses/:quizId" element={<Responses />} />
               <Route path="/view-response/:attemptId" element={<ViewResponse />} />
+              <Route path="/attempted-quizzes" element ={<AttemptedQuizzes />} />
 
             </Routes>
           </Content>

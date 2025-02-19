@@ -8,6 +8,8 @@ import {
   Card,
   Radio,
   Checkbox,
+  Input,
+  Form,
 } from "antd";
 import { auth, db } from "../../firebase";
 import { collection, addDoc, doc, setDoc } from "firebase/firestore";
@@ -19,11 +21,14 @@ const { Option } = Select;
 const QuizSettings = () => {
   const navigate = useNavigate();
   const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [customConcept, setCustomConcept] = useState("");
+  const [customTime, setCustomTime] = useState("");
   const [settings, setSettings] = useState({
     concept: null,
     numQuestions: null,
     difficulty: null,
     questionType: null,
+    timeLimit: null,
   });
   const [quizData, setQuizData] = useState(null);
   const [quizId, setQuizId] = useState(null);
@@ -33,9 +38,45 @@ const QuizSettings = () => {
 
   const handleSelect = (questionId, value) => {
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setError("")
+  };
+
+  const handleConceptChange = (value) => {
+    if (value === "other") {
+      setSettings((prev) => ({ ...prev, concept: customConcept }));
+    } else {
+      setSettings((prev) => ({ ...prev, concept: value }));
+      setCustomConcept("");
+      
+    }
+    setError("")
+  };
+  const handleTimeChange = (value) => {
+    if (value === "custom") {
+      setSettings((prev) => ({ ...prev, timeLimit: customTime }));
+    } else {
+      setSettings((prev) => ({ ...prev, timeLimit: value }));
+      setCustomConcept("");
+    }
+    setError("")
+  };
+
+  const handleCustomConceptChange = (e) => {
+    const newValue = e.target.value;
+    setCustomConcept(newValue);
+    setSettings((prev) => ({ ...prev, concept: newValue }));
+    setError("")
+  };
+
+  const handleCustomTimeChange = (e) => {
+    const newValue = e.target.value;
+    setCustomTime(newValue);
+    setSettings((prev) => ({ ...prev, timeLimit: newValue }));
+    setError("")
   };
 
   const fetchQuiz = async () => {
+    if (!validateFields()) return;
     setLoading(true);
     setError(null);
     setQuizData([]);
@@ -66,6 +107,7 @@ const QuizSettings = () => {
           num_of_questions: settings.numQuestions,
           difficulty_level: settings.difficulty,
           question_types: settings.questionType,
+          time_limit: settings.timeLimit,
           created_by: user.uid,
           created_at: new Date(),
           question_ids: [],
@@ -124,9 +166,8 @@ const QuizSettings = () => {
     } catch (error) {
       message.error("Failed to save quiz.");
       console.error("Error saving quiz:", error);
-    }
-    finally{
-        setAcceptLoading(false);
+    } finally {
+      setAcceptLoading(false);
     }
   };
 
@@ -134,6 +175,7 @@ const QuizSettings = () => {
     setQuizData(null);
     setQuizId(null);
     message.info("Quiz discarded.");
+    setError("")
   };
 
   useEffect(() => {
@@ -142,20 +184,48 @@ const QuizSettings = () => {
 
   const handleChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
+    setError("")
+  };
+  const validateFields = () => {
+    if (
+      !settings.concept || 
+      (settings.concept === customConcept && !customConcept) || 
+      !settings.numQuestions || 
+      !settings.difficulty || 
+      !settings.questionType || 
+      !settings.timeLimit || 
+      (settings.timeLimit === customTime && !customTime)
+    ) {
+      setError("Please fill all required fields.");
+      return false;
+    }
+    return true;
   };
 
   return (
     <div>
       <div className="quiz-settings">
+       
         <Select
           placeholder="Select Concept"
           className="quiz-dropdown"
-          onChange={(value) => handleChange("concept", value)}
+          onChange={handleConceptChange}
+          value={settings.concept === customConcept ? "other" : settings.concept}
         >
           <Option value="java">Java</Option>
           <Option value="python">Python</Option>
           <Option value="javascript">JavaScript</Option>
+          <Option value="other">Other</Option>
         </Select>
+
+        {settings.concept === customConcept && (
+          <Input
+            placeholder="Enter Custom Concept"
+            className="quiz-input"
+            value={customConcept}
+            onChange={handleCustomConceptChange}
+          />
+        )}
 
         <InputNumber
           min={1}
@@ -169,6 +239,7 @@ const QuizSettings = () => {
           placeholder="Difficulty Level"
           className="quiz-dropdown"
           onChange={(value) => handleChange("difficulty", value)}
+          
         >
           <Option value="easy">Easy</Option>
           <Option value="medium">Medium</Option>
@@ -184,6 +255,28 @@ const QuizSettings = () => {
           <Option value="multi-select">Multi-Select</Option>
         </Select>
 
+        <Select
+          placeholder="Select Time Limit (minutes)"
+          className="quiz-dropdown"
+          onChange={handleTimeChange}
+          value={settings.timeLimit === customTime ? "custom" : settings.timeLimit}
+        >
+          <Option value="5">5 minutes</Option>
+          <Option value="10">10 minutes</Option>
+          <Option value="15">15 minutes</Option>
+          <Option value="30">30 minutes</Option>
+          <Option value="custom">Custom</Option>
+        </Select>
+
+        {settings.timeLimit === customTime && (
+          <Input
+            placeholder="Enter Custom Time (minutes)"
+            className="quiz-input"
+            value={customTime}
+            onChange={handleCustomTimeChange}
+          />
+        )}
+
         <Button
           type="primary"
           className="quiz-button"
@@ -192,7 +285,7 @@ const QuizSettings = () => {
         >
           {loading ? "Generating..." : "Generate Quiz"}
         </Button>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {error && <p className="error">{error}</p>}
       </div>
 
       <div>
@@ -235,7 +328,12 @@ const QuizSettings = () => {
             <Button type="danger" className="discard-btn" onClick={handleDiscardQuiz}>
               Discard
             </Button>
-            <Button type="primary" className="accept-btn" onClick={handleAcceptQuiz} loading={acceptloading}>
+            <Button
+              type="primary"
+              className="accept-btn"
+              onClick={handleAcceptQuiz}
+              loading={acceptloading}
+            >
               Accept
             </Button>
           </div>
