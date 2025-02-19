@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, message, Space, Spin, Modal } from "antd";
-import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  deleteDoc,
-  doc,
-  where
-} from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where, deleteDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
+import { useAuth } from "../../context/UserContext"; // ✅ Import Auth Hook
 import {
   ShareAltOutlined,
   FormOutlined,
@@ -22,24 +15,27 @@ import "./AllQuizzes.css";
 const AllQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [attemptloader, setAttemptLoader] = useState(false);
-  const [responsesloader, setResponsesLoader] = useState(false);
-  const [shareloader, setShareLoader] = useState(false);
   const [deleteloader, setDeleteLoader] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth(); // ✅ Get current logged-in user
 
   useEffect(() => {
+    if (!user) return;
+     // Ensure user is logged in
+
     const fetchQuizzes = async () => {
-      setLoading(true);
+      
+      
       try {
+        setLoading(true);
         const quizzesRef = collection(db, "quizzes");
-        const q = query(quizzesRef, orderBy("created_at", "desc")); // Sorting by most recent
+        const q = query(quizzesRef, where("created_by", "==", user.uid)); // ✅ Filter by logged-in user
         const querySnapshot = await getDocs(q);
 
         const quizzesList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          created_at: doc.data().created_at?.toDate().toLocaleString(), // Formatting date
+          created_at: doc.data().created_at?.toDate().toLocaleString(),
         }));
 
         setQuizzes(quizzesList);
@@ -52,20 +48,10 @@ const AllQuizzes = () => {
     };
 
     fetchQuizzes();
-  }, []);
+  }, [user]); // ✅ Fetch when user changes
 
   const handleAttempt = (quizId) => {
-    try {
-        setAttemptLoader(true);
-        navigate(`/attempt-quiz/${quizId}`);
-        
-    } catch (error) {
-        
-    }
-    finally{
-        setAttemptLoader(false);
-    }
-    
+    navigate(`/attempt-quiz/${quizId}`);
   };
 
   const handleResponses = (quizId) => {
@@ -87,46 +73,21 @@ const AllQuizzes = () => {
       cancelText: "Cancel",
       onOk: () => handleDelete(quizId),
     });
-    console.log("Delete quiz with ID:", quizId);
-    
   };
 
   const handleDelete = async (quizId) => {
     try {
-        setDeleteLoader(true);
-      // Reference to the quiz document
+      setDeleteLoader(true);
       const quizRef = doc(db, "quizzes", quizId);
-
-      // Fetch the quiz document to get question IDs
-      const quizSnapshot = await getDocs(query(collection(db, "quizzes"), where("__name__", "==", quizId)));
-      if (!quizSnapshot.empty) {
-        const quizData = quizSnapshot.docs[0].data();
-        const questionIds = quizData.questions || []; // Array of question IDs
-
-        // Delete each question from the "questions" collection
-        const deleteQuestionPromises = questionIds.map(async (questionId) => {
-          const questionRef = doc(db, "questions", questionId);
-          await deleteDoc(questionRef);
-        });
-
-        await Promise.all(deleteQuestionPromises); // Wait for all deletions
-      }
-
-      // Delete the quiz document
       await deleteDoc(quizRef);
 
-      message.success("Quiz and related questions deleted successfully!");
-
-      // Refresh the quiz list
-      setQuizzes((prevQuizzes) =>
-        prevQuizzes.filter((quiz) => quiz.id !== quizId)
-      );
+      message.success("Quiz deleted successfully!");
+      setQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== quizId));
     } catch (error) {
       console.error("Error deleting quiz:", error);
       message.error("Failed to delete quiz.");
-    }
-    finally{
-        setDeleteLoader(false);
+    } finally {
+      setDeleteLoader(false);
     }
   };
 
@@ -165,25 +126,13 @@ const AllQuizzes = () => {
       key: "actions",
       render: (record) => (
         <Space size="middle">
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            onClick={() => handleAttempt(record.id)}
-          >
+          <Button type="primary" icon={<FormOutlined />} onClick={() => handleAttempt(record.id)}>
             Attempt
           </Button>
-          <Button
-            type="default"
-            icon={<BarChartOutlined />}
-            onClick={() => handleResponses(record.id)}
-          >
+          <Button type="default" icon={<BarChartOutlined />} onClick={() => handleResponses(record.id)}>
             Responses
           </Button>
-          <Button
-            type="dashed"
-            icon={<ShareAltOutlined />}
-            onClick={() => handleShare(record.id)}
-          >
+          <Button type="dashed" icon={<ShareAltOutlined />} onClick={() => handleShare(record.id)}>
             Share
           </Button>
           <Button
@@ -191,7 +140,7 @@ const AllQuizzes = () => {
             type="primary"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+            onClick={() => handleDeleteConfirm(record.id)}
           >
             Delete
           </Button>
@@ -202,27 +151,27 @@ const AllQuizzes = () => {
 
   return (
     <div className="container">
-        <div className="header">
-        <h2>All Quizzes</h2>
-    <Button type="primary" onClick={() => navigate("/quiz-settings")}>
-      Create Quiz
-    </Button>
-        </div>
-   
-    {loading ? (
-      <div className="loader-container">
-        <Spin size="large" />
+       {/* ✅ Add user check if not show a antd model with login with button and functionality */
+         !user &&
+          <Modal>
+            <Button>Login with Google</Button>
+          </Modal>
+       }
+      
+      <div className="header">
+        <h2>My Quizzes</h2>
+        <Button type="primary" onClick={() => navigate("/quiz-settings")}>
+          Create Quiz
+        </Button>
       </div>
-    ) : (
-      <Table
-        columns={columns}
-        dataSource={quizzes}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-        responsive
-      />
-    )}
-  </div>
+      {loading ? (
+        <div className="loader-container">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <Table columns={columns} dataSource={quizzes} rowKey="id" pagination={{ pageSize: 10 }} />
+      )}
+    </div>
   );
 };
 
