@@ -209,7 +209,7 @@ const items=[
                 })}
               </div>
               
-              <Collapse
+              <Collapse style={{ marginTop: "10px" }}
                 items={[
                   {
                     key: "1",
